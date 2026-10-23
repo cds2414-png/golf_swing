@@ -29,3 +29,11 @@
 - DB 스키마: `supabase/migrations/20261023000000_init_golf_swing.sql`
 - 요금·클럽 설정: `src/lib/golf.ts`, 분석 프롬프트: `src/lib/analyze-swing.ts`
 - 아이폰 HEVC(.mov) 영상은 Windows 크롬에서 디코딩이 안 될 수 있어요. 이 경우 MP4(H.264)로 올려야 합니다.
+
+## 배포 (Vercel)
+
+- 운영 주소: https://golf-swing-orpin.vercel.app (Vercel 프로젝트 `golf-swing`)
+- 환경 변수 7개(`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `NEXT_PUBLIC_TOSS_CLIENT_KEY`, `TOSS_SECRET_KEY`, `OPENAI_API_KEY`, `OPENAI_MODEL`)는 Vercel의 Production·Preview에 등록되어 있어요.
+- 재배포: `npx vercel deploy --prod`
+- GitHub 자동 배포는 아직 연결되지 않았어요. Vercel 대시보드 > Project > Settings > Git 에서 `cds2414-png/golf_swing`을 연결하면 `main`에 푸시할 때마다 자동 배포돼요.
+- PC 이름에 한글이 있으면 Vercel CLI가 `Cannot convert argument to a ByteString` 오류로 실패해요. 이때는 `os.hostname()`을 영문으로 바꾸는 스크립트를 `NODE_OPTIONS="--require <스크립트>"`로 미리 불러온 뒤 실행하세요.
