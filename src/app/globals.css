@@ -1,0 +1,102 @@
+@import "tailwindcss";
+
+/* 스윙체크 브랜드 — 야간 코스의 딥 그린 + 샴페인 골드 */
+:root {
+  color-scheme: dark;
+  --background: #06100c;
+  --surface: #0c1914;
+  --surface-2: #11231b;
+  --foreground: #eef4f0;
+  --muted: #8fa398;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --brand: #3ad482;
+  --brand-strong: #24b26a;
+  --brand-soft: rgba(58, 212, 130, 0.12);
+  --gold: #dcbc76;
+  --gold-strong: #f1d79c;
+  --gold-soft: rgba(220, 188, 118, 0.12);
+  --danger: #ff7a7a;
+  --danger-soft: rgba(255, 122, 122, 0.1);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-gold: var(--gold);
+  --color-gold-strong: var(--gold-strong);
+  --color-gold-soft: var(--gold-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --font-sans: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-display: var(--font-playfair), "Pretendard", serif;
+}
+
+html {
+  background: var(--background);
+}
+
+body {
+  background:
+    radial-gradient(1100px 600px at 85% -10%, rgba(58, 212, 130, 0.12), transparent 60%),
+    radial-gradient(900px 500px at -10% 10%, rgba(220, 188, 118, 0.08), transparent 60%),
+    var(--background);
+  background-attachment: fixed;
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  letter-spacing: -0.01em;
+}
+
+::selection {
+  background: rgba(220, 188, 118, 0.35);
+}
+
+@layer components {
+  .card {
+    @apply rounded-3xl border border-border bg-surface/80 p-6 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.8)] backdrop-blur-xl sm:p-8;
+  }
+  .card-soft {
+    @apply rounded-2xl border border-border bg-white/[0.03] p-5;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-b from-gold-strong to-gold px-6 py-3.5 font-semibold text-[#1a1407] shadow-[0_10px_30px_-10px_rgba(220,188,118,0.6)] transition hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none;
+  }
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-border-strong px-5 py-3 font-semibold text-foreground transition hover:border-gold/60 hover:bg-gold-soft;
+  }
+  .input {
+    @apply w-full rounded-xl border border-border-strong bg-black/30 px-4 py-3 text-foreground outline-none transition placeholder:text-muted/60 focus:border-gold/70 focus:ring-2 focus:ring-gold/20;
+  }
+  .input option {
+    @apply bg-surface text-foreground;
+  }
+  .label {
+    @apply mb-2 block text-sm font-medium text-foreground/90;
+  }
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-xs font-semibold tracking-[0.25em] text-gold uppercase;
+  }
+  .display {
+    @apply font-[family-name:var(--font-display)] tracking-tight;
+  }
+  .text-gold-gradient {
+    @apply bg-gradient-to-r from-gold-strong via-gold to-[#b8924a] bg-clip-text text-transparent;
+  }
+  .alert-error {
+    @apply rounded-xl border border-danger/30 bg-danger-soft p-3 text-sm text-danger;
+  }
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold;
+  }
+  .page-title {
+    @apply text-3xl font-bold tracking-tight sm:text-4xl;
+  }
+}
