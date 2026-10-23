@@ -19,7 +19,7 @@
 
 ## 흐름
 
-1. 회원가입(이름·출생 연도·성별·타석) → 가입 확인 메일 → `/auth/callback`
+1. 회원가입(이름·이메일·비밀번호·출생 연도·타석) → 메일 인증 없이 서버에서 인증 완료 계정 생성(`auth.admin.createUser`) 후 바로 로그인
 2. `/upload`: 골프채 선택, 영상 선택(브라우저에서 7초 초과 시 거절), 프레임 20장 추출 → Storage 업로드 → `POST /api/analyses`로 결제 대기 주문 생성(금액은 서버 요금표 기준)
 3. `/analyses/[id]/checkout`: 토스 결제위젯 → `/payments/success`에서 금액 검증 후 결제 승인
 4. `/analyses/[id]`: `POST /api/analyses/[id]/run`으로 GPT 분석 → 결과 리포트(종합 점수, 프로 대비 부족한 점, 비교표, 구간별 분석, 연령 맞춤 조언, 연습 드릴)
