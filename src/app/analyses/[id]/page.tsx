@@ -19,13 +19,25 @@ export default async function AnalysisPage({ params }: PageProps<"/analyses/[id]
   const supabase = await createClient();
   const { data: analysis } = await supabase
     .from("analyses")
-    .select("id, club_type, status, amount, video_path, age_at_analysis, result, created_at")
+    .select("id, club_type, status, amount, video_path, frame_paths, age_at_analysis, result, created_at")
     .eq("id", id)
     .maybeSingle();
   if (!analysis || !isClubType(analysis.club_type)) notFound();
 
   const status = analysis.status as AnalysisStatus;
   const { data: signed } = await supabase.storage.from("swing-videos").createSignedUrl(analysis.video_path, 60 * 60);
+
+  // 리포트에 캡처 프레임을 보여 주기 위해 완료된 분석만 프레임 서명 URL을 만든다.
+  let frames: { url: string; time: number }[] = [];
+  const framePaths = (analysis.frame_paths ?? []) as string[];
+  if (status === "completed" && framePaths.length) {
+    const { data: signedFrames } = await supabase.storage.from("swing-videos").createSignedUrls(framePaths, 60 * 60);
+    frames = framePaths.map((path, i) => ({
+      url: signedFrames?.[i]?.signedUrl ?? "",
+      // 파일명 frame_00_1.23.jpg 에서 시각(초)을 꺼낸다.
+      time: Number(path.match(/_([\d.]+)\.jpg$/)?.[1] ?? 0),
+    }));
+  }
 
   const clubLabel = CLUBS[analysis.club_type].label;
   const meta = [
@@ -88,7 +100,7 @@ export default async function AnalysisPage({ params }: PageProps<"/analyses/[id]
             <AnalysisRunner id={id} status={status} />
           )}
 
-          {status === "completed" && analysis.result && <Report result={analysis.result as SwingAnalysisResult} />}
+          {status === "completed" && analysis.result && <Report result={analysis.result as SwingAnalysisResult} frames={frames} />}
         </div>
       </div>
     </div>

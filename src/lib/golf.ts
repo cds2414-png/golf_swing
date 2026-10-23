@@ -52,6 +52,13 @@ export const PHASE_LABELS = {
 
 export type SwingPhase = keyof typeof PHASE_LABELS;
 
+// 캡처 프레임 위 문제 위치(이미지 기준 0~1 비율 좌표)
+export interface FrameMarker {
+  x: number;
+  y: number;
+  label: string;
+}
+
 export interface SwingAnalysisResult {
   is_golf_swing: boolean;
   overall_score: number;
@@ -59,6 +66,9 @@ export interface SwingAnalysisResult {
   swing_phases: {
     phase: SwingPhase;
     score: number;
+    // 마커 기능 추가 전 결과에는 없을 수 있다.
+    frame_index?: number;
+    markers?: FrameMarker[];
     observation: string;
     pro_standard: string;
     improvement: string;
@@ -69,7 +79,7 @@ export interface SwingAnalysisResult {
     pro_benchmark: string;
     gap_level: "small" | "medium" | "large";
   }[];
-  key_weaknesses: { title: string; detail: string; priority: number }[];
+  key_weaknesses: { title: string; detail: string; priority: number; frame_index?: number; markers?: FrameMarker[] }[];
   drills: { name: string; how_to: string; reps: string }[];
   age_considerations: string;
   video_quality_note: string;

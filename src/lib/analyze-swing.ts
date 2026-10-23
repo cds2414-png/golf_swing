@@ -2,6 +2,27 @@ import "server-only";
 import OpenAI from "openai";
 import { CLUBS, PHASE_LABELS, ageGroupLabel, type ClubType, type SwingAnalysisResult } from "@/lib/golf";
 
+// 캡처 프레임 위에 문제 위치를 표시하기 위한 마커. 좌표는 이미지 기준 0~1 비율.
+const MARKERS_SCHEMA = {
+  type: "array",
+  description: "frame_index 이미지에서 문제가 보이는 신체·클럽 부위 0~3개. 문제 없으면 빈 배열",
+  items: {
+    type: "object",
+    additionalProperties: false,
+    required: ["x", "y", "label"],
+    properties: {
+      x: { type: "number", description: "가로 위치(왼쪽 0 ~ 오른쪽 1)" },
+      y: { type: "number", description: "세로 위치(위 0 ~ 아래 1)" },
+      label: { type: "string", description: "짧은 표시 문구(예: 머리 앞으로 나감, 왼무릎 펴짐) 12자 이내" },
+    },
+  },
+} as const;
+
+const FRAME_INDEX_SCHEMA = {
+  type: "integer",
+  description: "근거가 가장 잘 보이는 프레임 번호(#0부터). 판단할 프레임이 없으면 -1",
+} as const;
+
 const RESULT_SCHEMA = {
   type: "object",
   additionalProperties: false,
@@ -28,9 +49,11 @@ const RESULT_SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["phase", "score", "observation", "pro_standard", "improvement"],
+        required: ["phase", "score", "frame_index", "markers", "observation", "pro_standard", "improvement"],
         properties: {
           phase: { type: "string", enum: Object.keys(PHASE_LABELS) },
+          frame_index: FRAME_INDEX_SCHEMA,
+          markers: MARKERS_SCHEMA,
           score: { type: "integer", description: "0~100" },
           observation: { type: "string", description: "프레임에서 관찰한 사용자 동작" },
           pro_standard: { type: "string", description: "이 구간에서 프로 선수의 일반적인 동작" },
@@ -59,8 +82,10 @@ const RESULT_SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["title", "detail", "priority"],
+        required: ["title", "detail", "priority", "frame_index", "markers"],
         properties: {
+          frame_index: FRAME_INDEX_SCHEMA,
+          markers: MARKERS_SCHEMA,
           title: { type: "string" },
           detail: { type: "string" },
           priority: { type: "integer" },
@@ -111,6 +136,9 @@ function buildInstructions() {
     "- is_golf_swing이 false이면 overall_score와 모든 score는 0, summary에는 분석할 수 없는 이유와 다시 찍는 방법을 2~3문장으로 쓰고,",
     "  swing_phases·pro_comparison·key_weaknesses·drills는 빈 배열, age_considerations와 video_quality_note는 빈 문자열로 둡니다.",
     "- swing_phases는 어드레스부터 피니시까지 6개 구간을 모두 포함합니다. 퍼터라면 구간 의미를 퍼팅 스트로크에 맞게 해석합니다.",
+    "- 각 이미지 앞에 \"프레임 #번호\"가 붙어 있습니다. swing_phases와 key_weaknesses마다 근거가 가장 잘 보이는 프레임 번호를 frame_index에 적습니다.",
+    "- markers에는 그 프레임에서 문제가 되는 부위(머리, 어깨, 골반, 무릎, 손, 클럽헤드, 공 등)의 위치를 이미지 비율 좌표로 찍습니다.",
+    "  x는 왼쪽 0 ~ 오른쪽 1, y는 위 0 ~ 아래 1입니다. 부위의 중심을 최대한 정확히 가리키고, 잘 된 구간은 markers를 비워 둡니다.",
   ].join("\n");
 }
 
@@ -142,11 +170,11 @@ export async function analyzeSwing(input: SwingInput): Promise<SwingAnalysisResu
         role: "user",
         content: [
           { type: "input_text", text: buildUserText(input) },
-          ...input.frames.map((f) => ({
-            type: "input_image" as const,
-            image_url: f.dataUrl,
-            detail: "auto" as const,
-          })),
+          // 각 이미지 앞에 번호를 붙여 AI가 frame_index로 가리킬 수 있게 한다.
+          ...input.frames.flatMap((f, i) => [
+            { type: "input_text" as const, text: `프레임 #${i} (${f.time.toFixed(2)}초)` },
+            { type: "input_image" as const, image_url: f.dataUrl, detail: "auto" as const },
+          ]),
         ],
       },
     ],

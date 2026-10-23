@@ -1,6 +1,41 @@
 import Link from "next/link";
+import AnnotatedFrame from "@/components/AnnotatedFrame";
 import StatusCard from "@/components/StatusCard";
-import { PHASE_LABELS, type SwingAnalysisResult } from "@/lib/golf";
+import { PHASE_LABELS, type FrameMarker, type SwingAnalysisResult } from "@/lib/golf";
+
+export interface ReportFrame {
+  url: string;
+  time: number;
+}
+
+// AI가 가리킨 프레임 번호로 캡처 이미지를 찾는다. 번호가 없거나 범위를 벗어나면 표시하지 않는다.
+function pickFrame(frames: ReportFrame[], index?: number) {
+  if (index === undefined || index < 0 || index >= frames.length || !frames[index].url) return null;
+  return { ...frames[index], index };
+}
+
+function FrameCapture({
+  frames,
+  index,
+  markers,
+  className,
+}: {
+  frames: ReportFrame[];
+  index?: number;
+  markers?: FrameMarker[];
+  className?: string;
+}) {
+  const frame = pickFrame(frames, index);
+  if (!frame) return null;
+  return (
+    <AnnotatedFrame
+      src={frame.url}
+      markers={markers}
+      caption={`캡처 #${frame.index + 1} · ${frame.time.toFixed(2)}초${markers?.length ? " · 빨간 원이 문제 부위예요" : ""}`}
+      className={className}
+    />
+  );
+}
 
 const GAP_STYLE = {
   small: { label: "근접", className: "bg-brand-soft text-brand" },
@@ -56,7 +91,7 @@ function SectionTitle({ eyebrow, title }: { eyebrow: string; title: string }) {
   );
 }
 
-export default function Report({ result }: { result: SwingAnalysisResult }) {
+export default function Report({ result, frames = [] }: { result: SwingAnalysisResult; frames?: ReportFrame[] }) {
   if (!result.is_golf_swing) {
     return (
       <StatusCard
@@ -98,14 +133,35 @@ export default function Report({ result }: { result: SwingAnalysisResult }) {
 
       <section className="card">
         <SectionTitle eyebrow="Key Gaps" title="프로 대비 부족한 점" />
-        <ol className="grid gap-4 md:grid-cols-3">
-          {weaknesses.map((w, i) => (
-            <li key={w.title} className="card-soft relative">
-              <div className="display text-4xl font-semibold italic text-gold/80">0{i + 1}</div>
-              <div className="mt-3 font-semibold">{w.title}</div>
-              <p className="mt-2 text-sm leading-relaxed text-muted">{w.detail}</p>
-            </li>
-          ))}
+        <ol className="space-y-4">
+          {weaknesses.map((w, i) => {
+            const hasFrame = !!pickFrame(frames, w.frame_index);
+            return (
+              <li
+                key={w.title}
+                className={`card-soft grid gap-5 ${hasFrame ? "md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] md:items-center" : ""}`}
+              >
+                <FrameCapture frames={frames} index={w.frame_index} markers={w.markers} />
+                <div>
+                  <div className="display text-4xl font-semibold italic text-gold/80">0{i + 1}</div>
+                  <div className="mt-3 text-lg font-semibold">{w.title}</div>
+                  <p className="mt-2 text-sm leading-relaxed text-muted">{w.detail}</p>
+                  {!!w.markers?.length && (
+                    <ul className="mt-4 space-y-1.5 text-sm">
+                      {w.markers.map((m, k) => (
+                        <li key={k} className="flex items-center gap-2">
+                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-danger bg-danger-soft text-[10px] font-bold text-danger">
+                            {k + 1}
+                          </span>
+                          <span className="text-foreground/90">{m.label}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </li>
+            );
+          })}
         </ol>
       </section>
 
@@ -155,6 +211,12 @@ export default function Report({ result }: { result: SwingAnalysisResult }) {
                   <span className={`w-10 text-right font-semibold ${t.text}`}>{p.score}</span>
                   <span className="text-muted transition group-open:rotate-180">⌄</span>
                 </summary>
+                <FrameCapture
+                  frames={frames}
+                  index={p.frame_index}
+                  markers={p.markers}
+                  className="mx-auto mt-5 max-w-xl border-t border-border pt-5"
+                />
                 <dl className="mt-5 grid gap-4 border-t border-border pt-5 text-sm md:grid-cols-3">
                   <div>
                     <dt className="mb-1.5 text-xs tracking-wider text-muted uppercase">내 동작</dt>
