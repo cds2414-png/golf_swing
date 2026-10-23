@@ -15,7 +15,7 @@ export function isClubType(value: unknown): value is ClubType {
   return typeof value === "string" && value in CLUBS;
 }
 
-export const MAX_VIDEO_SECONDS = 7;
+export const MAX_VIDEO_SECONDS = 8;
 export const FRAME_COUNT = 20;
 export const FRAME_MAX_WIDTH = 640;
 

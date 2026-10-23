@@ -13,7 +13,7 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: "스윙체크 · AI 골프 스윙 분석",
-  description: "7초 스윙 영상으로 프로 선수 대비 부족한 점을 AI가 분석해 드립니다.",
+  description: "8초 스윙 영상으로 프로 선수 대비 부족한 점을 AI가 분석해 드립니다.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
